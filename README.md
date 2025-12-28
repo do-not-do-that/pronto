@@ -30,6 +30,8 @@ export AWS_PROFILE=dev-account-a
 
 - 🚀 **원클릭 전환**: 메뉴바에서 Profile 클릭 한 번으로 전환
 - 🔐 **자동 SSO 로그인**: Profile 전환 시 브라우저에서 자동 로그인
+- 🔔 **만료 알림**: Credential 만료 5분 전 자동 알림 (배터리 효율적)
+- ⏱️ **만료 시간 표시**: 남은 시간 실시간 표시
 - 🌍 **전역 적용**: DataGrip, VSCode, 터미널 등 모든 도구에 자동 반영
 - 🔄 **터미널 세션 자동 업데이트**: iTerm2/Terminal.app의 열린 세션 즉시 반영
 - ⚡ **빠른 실행**: 메뉴바에 상주하는 가벼운 앱
@@ -48,16 +50,43 @@ export AWS_PROFILE=dev-account-a
 
 ### 설치 방법
 
+#### Homebrew (권장)
+
 ```bash
-# 1. Pronto.app 다운로드
-# (Coming soon: Homebrew Cask)
+# Tap 추가
+brew tap donotdothat/pronto
 
-# 2. Applications 폴더로 이동
-mv Pronto.app /Applications/
+# 설치
+brew install --cask pronto
 
-# 3. 실행
-open /Applications/Pronto.app
+# 실행
+open -a Pronto
 ```
+
+#### 수동 설치
+
+1. [Releases](https://github.com/YOUR_USERNAME/pronto/releases)에서 최신 버전 다운로드
+2. `Pronto.app`을 Applications 폴더로 이동
+3. 실행: `open /Applications/Pronto.app`
+
+#### ⚠️ 처음 실행 시 경고
+
+**"확인되지 않은 개발자" 경고가 나타납니다.** 이것은 정상입니다.
+
+**해결 방법:**
+1. Finder에서 `Pronto.app` 우클릭
+2. "열기" 클릭 → "열기" 버튼 클릭
+
+또는 터미널에서:
+```bash
+xattr -cr /Applications/Pronto.app
+open -a Pronto
+```
+
+**이유:**
+- 오픈소스 프로젝트로 Apple Developer Program 미가입
+- 코드는 GitHub에 공개되어 투명하게 검증 가능
+- Homebrew 커뮤니티를 통한 배포
 
 ---
 
@@ -111,39 +140,6 @@ source ~/.pronto_profile
 **권장 설정:**
 - iTerm2/Terminal.app 사용자: **ON** (즉시 반영)
 - IDE 터미널 사용자: **OFF** (새 터미널로 전환)
-
----
-
-## 💡 동작 원리
-
-Pronto는 `~/.pronto_profile` 파일을 생성하고, Shell 설정(`.zshrc`, `.bashrc`)에 자동으로 연결합니다.
-
-```bash
-# ~/.pronto_profile
-export AWS_PROFILE="your-selected-profile"
-```
-
-### 아키텍처
-
-```
-┌─────────────────────────────────────┐
-│      Pronto Menu Bar App            │
-│                                     │
-│  SwiftUI MenuBarExtra               │
-│      ↓                              │
-│  ProfileManager                     │
-│      ↓                              │
-│  EnvironmentManager                 │
-│      ↓                              │
-│  ~/.pronto_profile                  │
-│  ~/.zshrc, ~/.bashrc                │
-└─────────────────────────────────────┘
-```
-
-**핵심 특징:**
-- **파일 기반 환경변수**: 모든 macOS 버전에서 안정적으로 동작
-- **AWS Config v1/v2 지원**: 다양한 AWS CLI 설정 포맷 지원
-- **자동 경로 탐지**: Apple Silicon/Intel 아키텍처 자동 인식
 
 ---
 
@@ -209,10 +205,11 @@ Pronto/
 │   ├── AWSProfile.swift         # Profile 데이터 모델
 │   └── AppState.swift           # 전역 상태 관리
 ├── Services/
-│   ├── AWSConfigParser.swift   # ~/.aws/config 파싱
-│   ├── ProfileManager.swift    # Profile 관리 + SSO 로그인
+│   ├── AWSConfigParser.swift    # ~/.aws/config 파싱
+│   ├── ProfileManager.swift     # Profile 관리 + SSO 로그인
 │   ├── EnvironmentManager.swift # 환경변수 관리
-│   └── TerminalController.swift # 터미널 세션 업데이트
+│   ├── TerminalController.swift # 터미널 세션 업데이트
+│   └── CredentialMonitor.swift  # Credential 만료 모니터링
 ├── Views/
 │   ├── MenuBarView.swift        # 메뉴바 UI
 │   └── SettingsView.swift       # 설정 창
@@ -267,18 +264,20 @@ open Pronto.xcodeproj
 
 ## 📝 로드맵
 
-### v1.1 (예정)
-- [ ] Credential 만료 시간 표시
-- [ ] 만료 5분 전 알림
-- [ ] 현재 Account ID 표시
+### v1.0 (완료) ✅
+- [x] Credential 만료 시간 표시
+- [x] 만료 5분 전 알림
+- [x] 터미널 세션 자동 업데이트
+- [x] 배터리 효율적인 알림 시스템
+- [x] Homebrew Cask 배포
 
-### v1.2 (예정)
+### v1.1 (예정)
+- [ ] 현재 Account ID 표시
 - [ ] Profile 그룹화 기능
 - [ ] 검색 기능
-- [ ] 키보드 단축키
 
-### v2.0 (예정)
-- [ ] Homebrew Cask 배포
+### v1.2 (예정)
+- [ ] 키보드 단축키
 - [ ] 다크 모드 커스터마이징
 - [ ] 더 많은 터미널 지원 (Warp, Alacritty 등)
 

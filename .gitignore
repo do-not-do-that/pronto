@@ -40,3 +40,8 @@ fastlane/test_output
 # Code coverage
 *.gcda
 *.gcno
+
+# Release artifacts
+*.app
+*.zip
+*.dmg
