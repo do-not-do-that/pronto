@@ -99,18 +99,21 @@ class UpdateChecker: ObservableObject {
         echo "Waiting for app to quit..."
         sleep 3
 
-        # 2. Tap 완전 재설치 (최신 버전 보장)
+        # 2. Tap 완전 재설치 및 최신 버전 강제 업데이트
         echo "Removing old tap..."
         brew untap do-not-do-that/pronto 2>/dev/null || true
 
         echo "Adding fresh tap from GitHub..."
         brew tap do-not-do-that/pronto
 
+        echo "Updating to latest version..."
+        brew update
+
         echo "Cleaning up old versions..."
         brew cleanup do-not-do-that/pronto/pronto 2>/dev/null || true
 
         echo "Reinstalling Pronto..."
-        brew reinstall --cask --force --no-quarantine do-not-do-that/pronto/pronto
+        brew reinstall --cask --force do-not-do-that/pronto/pronto
 
         echo "Upgrade exit code: $?"
 
