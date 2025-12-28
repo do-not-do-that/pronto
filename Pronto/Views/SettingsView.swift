@@ -44,7 +44,7 @@ struct SettingsView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
-                    Text("만료 임박 알림을 받으려면 알림 권한이 필요합니다")
+                    Text("만료 알림을 받으려면 알림 권한이 필요합니다")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
