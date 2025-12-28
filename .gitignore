@@ -45,3 +45,13 @@ fastlane/test_output
 *.app
 *.zip
 *.dmg
+
+# Development and internal documentation
+SESSION_STATE.md
+CONFLUENCE_DOC.md
+DEPLOYMENT.md
+RECORDING_GUIDE.md
+
+# Scripts and temporary files
+scripts/
+*.profraw
