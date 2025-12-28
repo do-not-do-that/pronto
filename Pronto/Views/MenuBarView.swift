@@ -126,6 +126,8 @@ struct NoActiveProfileHeader: View {
 struct ProfileListView: View {
     @ObservedObject var profileManager: ProfileManager
     @ObservedObject var favoriteManager: FavoriteManager
+    @AppStorage("favoriteSectionExpanded") private var favoriteSectionExpanded = true
+    @AppStorage("allProfilesSectionExpanded") private var allProfilesSectionExpanded = true
 
     private var favoriteProfiles: [AWSProfile] {
         profileManager.profiles.filter { favoriteManager.isFavorite($0.name) }
@@ -141,61 +143,83 @@ struct ProfileListView: View {
                 // 즐겨찾기 섹션
                 if !favoriteProfiles.isEmpty {
                     // 헤더
-                    HStack {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                            .font(.caption)
-                        Text("즐겨찾기")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        Spacer()
+                    Button(action: {
+                        favoriteSectionExpanded.toggle()
+                    }) {
+                        HStack {
+                            Image(systemName: favoriteSectionExpanded ? "chevron.down" : "chevron.right")
+                                .foregroundColor(.secondary)
+                                .font(.caption2)
+                                .frame(width: 12)
+                            Image(systemName: "star.fill")
+                                .foregroundColor(.yellow)
+                                .font(.caption)
+                            Text("즐겨찾기")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.gray.opacity(0.1))
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.gray.opacity(0.1))
+                    .buttonStyle(.plain)
 
-                    ForEach(favoriteProfiles) { profile in
-                        ProfileRow(
-                            profile: profile,
-                            isActive: profile.id == profileManager.activeProfile?.id,
-                            favoriteManager: favoriteManager,
-                            onTap: {
-                                Task {
-                                    try? await profileManager.switchProfile(profile)
+                    if favoriteSectionExpanded {
+                        ForEach(favoriteProfiles) { profile in
+                            ProfileRow(
+                                profile: profile,
+                                isActive: profile.id == profileManager.activeProfile?.id,
+                                favoriteManager: favoriteManager,
+                                onTap: {
+                                    Task {
+                                        try? await profileManager.switchProfile(profile)
+                                    }
                                 }
-                            }
-                        )
-                        Divider()
+                            )
+                            Divider()
+                        }
                     }
                 }
 
                 // 모든 Profile 섹션
                 if !otherProfiles.isEmpty && !favoriteProfiles.isEmpty {
                     // 헤더
-                    HStack {
-                        Text("모든 Profile")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
-                        Spacer()
+                    Button(action: {
+                        allProfilesSectionExpanded.toggle()
+                    }) {
+                        HStack {
+                            Image(systemName: allProfilesSectionExpanded ? "chevron.down" : "chevron.right")
+                                .foregroundColor(.secondary)
+                                .font(.caption2)
+                                .frame(width: 12)
+                            Text("모든 Profile")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.gray.opacity(0.1))
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.gray.opacity(0.1))
+                    .buttonStyle(.plain)
 
-                    ForEach(otherProfiles) { profile in
-                        ProfileRow(
-                            profile: profile,
-                            isActive: profile.id == profileManager.activeProfile?.id,
-                            favoriteManager: favoriteManager,
-                            onTap: {
-                                Task {
-                                    try? await profileManager.switchProfile(profile)
+                    if allProfilesSectionExpanded {
+                        ForEach(otherProfiles) { profile in
+                            ProfileRow(
+                                profile: profile,
+                                isActive: profile.id == profileManager.activeProfile?.id,
+                                favoriteManager: favoriteManager,
+                                onTap: {
+                                    Task {
+                                        try? await profileManager.switchProfile(profile)
+                                    }
                                 }
-                            }
-                        )
-                        Divider()
+                            )
+                            Divider()
+                        }
                     }
                 } else if favoriteProfiles.isEmpty {
                     // 즐겨찾기가 없으면 모든 profile 표시
