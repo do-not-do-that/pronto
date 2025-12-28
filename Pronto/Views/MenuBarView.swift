@@ -368,7 +368,7 @@ struct BottomActionsView: View {
                     await profileManager.refreshProfiles()
                 }
             } label: {
-                Label("새로고침", systemImage: "arrow.clockwise")
+                Text("새로고침")
                     .font(.system(size: 12))
             }
             .buttonStyle(.bordered)
