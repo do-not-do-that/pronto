@@ -86,20 +86,46 @@ class UpdateChecker: ObservableObject {
         let updateScript = """
         #!/bin/bash
 
-        # 1. 앱이 완전히 종료될 때까지 대기
-        sleep 2
+        # 로그 파일 설정
+        exec > /tmp/pronto_update.log 2>&1
+        echo "=== Pronto Auto-Update Started: $(date) ==="
 
-        # 2. Homebrew 업데이트 실행
-        brew update
-        brew tap --force do-not-do-that/pronto
-        brew cleanup do-not-do-that/pronto/pronto
-        brew upgrade --cask --force --no-quarantine do-not-do-that/pronto/pronto || brew reinstall --cask --force --no-quarantine do-not-do-that/pronto/pronto
+        # PATH 설정 (brew 명령어 찾기 위함)
+        export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+        echo "PATH: $PATH"
+        echo "Brew location: $(which brew)"
+
+        # 1. 앱이 완전히 종료될 때까지 대기
+        echo "Waiting for app to quit..."
+        sleep 3
+
+        # 2. Tap 완전 재설치 (최신 버전 보장)
+        echo "Removing old tap..."
+        brew untap do-not-do-that/pronto 2>/dev/null || true
+
+        echo "Adding fresh tap from GitHub..."
+        brew tap do-not-do-that/pronto
+
+        echo "Cleaning up old versions..."
+        brew cleanup do-not-do-that/pronto/pronto 2>/dev/null || true
+
+        echo "Reinstalling Pronto..."
+        brew reinstall --cask --force --no-quarantine do-not-do-that/pronto/pronto
+
+        echo "Upgrade exit code: $?"
 
         # 3. 설치 완료 후 앱 재시작
-        sleep 1
+        echo "Waiting before relaunch..."
+        sleep 2
+
+        echo "Relaunching app..."
         open /Applications/Pronto.app
 
-        # 4. 임시 스크립트 삭제
+        # 4. 완료
+        echo "=== Pronto Auto-Update Completed: $(date) ==="
+
+        # 5. 임시 스크립트 삭제 (10초 후)
+        sleep 10
         rm -f /tmp/pronto_update.sh
         """
 
