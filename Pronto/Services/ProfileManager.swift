@@ -19,6 +19,9 @@ class ProfileManager: ObservableObject {
     private let environmentManager = EnvironmentManager()
 
     init() {
+        // 첫 실행 시 Shell 설정 초기화
+        environmentManager.initializeIfNeeded()
+
         Task {
             await loadProfiles()
             await loadActiveProfile()
@@ -53,9 +56,17 @@ class ProfileManager: ObservableObject {
         errorMessage = nil
 
         do {
+            // 1. 환경변수 설정
             try environmentManager.setGlobalEnvironment(profileName: profile.name)
             self.activeProfile = profile
             print("✅ Profile 전환 완료: \(profile.name)")
+
+            // 2. SSO Profile이면 자동 로그인 시도
+            if profile.isSSOProfile {
+                print("🔐 SSO 로그인 시도 중...")
+                try? await ssoLogin(profile: profile)
+            }
+
         } catch {
             self.errorMessage = "Profile 전환 실패: \(error.localizedDescription)"
             throw error

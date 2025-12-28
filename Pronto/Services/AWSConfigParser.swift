@@ -33,7 +33,12 @@ class AWSConfigParser {
     }
 
     static func parseProfiles() throws -> [AWSProfile] {
+        print("🔍 Looking for AWS config at: \(configPath.path)")
+        print("🔍 File exists: \(FileManager.default.fileExists(atPath: configPath.path))")
+        print("🔍 Home directory: \(FileManager.default.homeDirectoryForCurrentUser.path)")
+
         guard FileManager.default.fileExists(atPath: configPath.path) else {
+            print("❌ File not found at: \(configPath.path)")
             throw AWSConfigError.fileNotFound
         }
 
@@ -81,8 +86,12 @@ class AWSConfigParser {
                     currentProfileName = String(sectionName.dropFirst(8)).trimmingCharacters(in: .whitespaces)
                 } else if sectionName == "default" {
                     currentProfileName = "default"
+                } else if sectionName.hasPrefix("sso-session ") {
+                    // sso-session 섹션은 무시
+                    currentProfileName = nil
                 } else {
-                    currentProfileName = sectionName
+                    // 기타 섹션도 무시 (credential_process 등)
+                    currentProfileName = nil
                 }
 
                 currentProfileData = [:]
@@ -112,6 +121,7 @@ class AWSConfigParser {
             ssoRegion: data["sso_region"],
             ssoAccountId: data["sso_account_id"],
             ssoRoleName: data["sso_role_name"],
+            ssoSessionName: data["sso_session"],  // AWS Config v2
             region: data["region"]
         )
     }
