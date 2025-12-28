@@ -51,9 +51,8 @@ export AWS_PROFILE=dev-account-a
 #### Homebrew (권장)
 
 ```bash
-# Tap 추가 및 설치
-brew tap donotdothat/pronto
-brew install --cask pronto
+# 설치
+brew install --cask do-not-do-that/pronto/pronto
 
 # Gatekeeper 경고 제거 후 실행
 xattr -cr /Applications/Pronto.app
@@ -62,7 +61,7 @@ open -a Pronto
 
 #### 수동 설치
 
-1. [Releases](https://github.com/YOUR_USERNAME/pronto/releases)에서 최신 버전 다운로드
+1. [Releases](https://github.com/do-not-do-that/pronto/releases)에서 최신 버전 다운로드
 2. `Pronto.app`을 Applications 폴더로 이동
 3. Gatekeeper 경고 제거:
 ```bash
@@ -137,7 +136,7 @@ source ~/.pronto_profile
 
 버그 리포트나 기능 제안은 언제든 환영합니다!
 
-[Issues](https://github.com/YOUR_USERNAME/pronto/issues)
+[Issues](https://github.com/do-not-do-that/pronto/issues)
 
 ---
 
