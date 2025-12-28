@@ -81,6 +81,9 @@ struct CurrentProfileHeader: View {
         }
         .padding(12)
         .background(Color.green.opacity(0.1))
+        .onAppear {
+            credentialMonitor.updateTimeRemaining()
+        }
     }
 
     private var timeRemainingColor: Color {

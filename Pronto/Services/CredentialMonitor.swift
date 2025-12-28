@@ -22,11 +22,6 @@ struct CredentialInfo: Codable {
         guard let expiration = expirationDate else { return nil }
         return expiration.timeIntervalSince(Date())
     }
-
-    var isExpiringSoon: Bool {
-        guard let remaining = timeRemaining else { return false }
-        return remaining > 0 && remaining < 300
-    }
 }
 
 @MainActor
@@ -34,8 +29,7 @@ class CredentialMonitor: ObservableObject {
     @Published var currentCredential: CredentialInfo?
     @Published var timeRemaining: String?
 
-    private var timer: Timer?
-    private var lastNotificationTime: Date?
+    private var notificationIdentifier: String?
 
     private var ssoCachePath: URL {
         FileManager.default
@@ -52,26 +46,113 @@ class CredentialMonitor: ObservableObject {
 
         Task {
             await loadCredential(for: profile)
-            startTimer()
+            updateTimeRemaining()
+            await scheduleExpirationNotification()
         }
     }
 
     func stopMonitoring() {
-        timer?.invalidate()
-        timer = nil
+        if let identifier = notificationIdentifier {
+            UNUserNotificationCenter.current().removePendingNotificationRequests(
+                withIdentifiers: [identifier]
+            )
+        }
+        notificationIdentifier = nil
         currentCredential = nil
         timeRemaining = nil
     }
 
-    private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.updateTimeRemaining()
-            }
+    private func scheduleExpirationNotification() async {
+        guard let credential = currentCredential,
+              let remaining = credential.timeRemaining else {
+            return
         }
 
-        Task {
-            await updateTimeRemaining()
+        if remaining <= 0 {
+            return
+        }
+
+        if remaining <= 300 {
+            await sendImmediateNotification()
+            return
+        }
+
+        let notificationDelay = remaining - 300
+
+        let content = UNMutableNotificationContent()
+        content.title = "AWS 인증 만료 임박"
+        content.body = "AWS SSO 인증이 5분 후 만료됩니다. Profile을 다시 전환해주세요."
+        content.sound = .default
+
+        let trigger = UNTimeIntervalNotificationTrigger(
+            timeInterval: notificationDelay,
+            repeats: false
+        )
+
+        let identifier = UUID().uuidString
+        self.notificationIdentifier = identifier
+
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            // Silently fail
+        }
+    }
+
+    private func sendImmediateNotification() async {
+        let content = UNMutableNotificationContent()
+        content.title = "AWS 인증 만료 임박"
+        content.body = "AWS SSO 인증이 곧 만료됩니다. Profile을 다시 전환해주세요."
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil
+        )
+
+        do {
+            try await UNUserNotificationCenter.current().add(request)
+        } catch {
+            // Silently fail
+        }
+    }
+
+    func updateTimeRemaining() {
+        guard let credential = currentCredential else {
+            timeRemaining = nil
+            return
+        }
+
+        if credential.isExpired {
+            timeRemaining = "만료됨"
+            return
+        }
+
+        guard let remaining = credential.timeRemaining else {
+            timeRemaining = nil
+            return
+        }
+
+        timeRemaining = formatTimeRemaining(remaining)
+    }
+
+    private func formatTimeRemaining(_ seconds: TimeInterval) -> String {
+        let hours = Int(seconds) / 3600
+        let minutes = (Int(seconds) % 3600) / 60
+
+        if hours > 0 {
+            return "\(hours)시간 \(minutes)분 남음"
+        } else if minutes > 0 {
+            return "\(minutes)분 남음"
+        } else {
+            return "1분 미만 남음"
         }
     }
 
@@ -112,70 +193,7 @@ class CredentialMonitor: ObservableObject {
         return credential
     }
 
-    private func updateTimeRemaining() async {
-        guard let credential = currentCredential else {
-            timeRemaining = nil
-            return
-        }
-
-        if credential.isExpired {
-            timeRemaining = "만료됨"
-            return
-        }
-
-        guard let remaining = credential.timeRemaining else {
-            timeRemaining = nil
-            return
-        }
-
-        timeRemaining = formatTimeRemaining(remaining)
-
-        if credential.isExpiringSoon {
-            await sendExpirationWarning(remaining: remaining)
-        }
-    }
-
-    private func formatTimeRemaining(_ seconds: TimeInterval) -> String {
-        let hours = Int(seconds) / 3600
-        let minutes = (Int(seconds) % 3600) / 60
-
-        if hours > 0 {
-            return "\(hours)시간 \(minutes)분 남음"
-        } else if minutes > 0 {
-            return "\(minutes)분 남음"
-        } else {
-            return "1분 미만 남음"
-        }
-    }
-
-    private func sendExpirationWarning(remaining: TimeInterval) async {
-        let now = Date()
-        if let lastNotification = lastNotificationTime,
-           now.timeIntervalSince(lastNotification) < 300 {
-            return
-        }
-
-        lastNotificationTime = now
-
-        let content = UNMutableNotificationContent()
-        content.title = "AWS 인증 만료 임박"
-        content.body = "AWS SSO 인증이 곧 만료됩니다. Profile을 다시 전환해주세요."
-        content.sound = .default
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: nil
-        )
-
-        try? await UNUserNotificationCenter.current().add(request)
-    }
-
     private func requestNotificationPermission() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error = error {
-                print("Notification permission error: \(error)")
-            }
-        }
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 }
