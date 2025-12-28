@@ -1,10 +1,3 @@
-//
-//  ProntoApp.swift
-//  Pronto
-//
-//  메인 앱 진입점
-//
-
 import SwiftUI
 
 @main

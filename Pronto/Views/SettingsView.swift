@@ -1,10 +1,3 @@
-//
-//  SettingsView.swift
-//  Pronto
-//
-//  설정 창 UI
-//
-
 import SwiftUI
 
 struct SettingsView: View {
@@ -50,7 +43,7 @@ struct SettingsView: View {
 
             HStack {
                 Button("GitHub에서 보기") {
-                    if let url = URL(string: "https://github.com/medistream/pronto") {
+                    if let url = URL(string: "https://github.com/do-not-do-that/pronto") {
                         NSWorkspace.shared.open(url)
                     }
                 }

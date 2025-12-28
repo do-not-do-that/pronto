@@ -1,10 +1,3 @@
-//
-//  MenuBarView.swift
-//  Pronto
-//
-//  메뉴바 드롭다운 UI
-//
-
 import SwiftUI
 
 struct MenuBarView: View {

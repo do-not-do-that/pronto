@@ -1,10 +1,3 @@
-//
-//  ProfileManager.swift
-//  Pronto
-//
-//  AWS Profile 관리
-//
-
 import Foundation
 import SwiftUI
 import Combine
@@ -19,7 +12,6 @@ class ProfileManager: ObservableObject {
     private let environmentManager = EnvironmentManager()
 
     init() {
-        // 첫 실행 시 Shell 설정 초기화
         environmentManager.initializeIfNeeded()
 
         Task {
@@ -56,14 +48,10 @@ class ProfileManager: ObservableObject {
         errorMessage = nil
 
         do {
-            // 1. 환경변수 설정
             try environmentManager.setGlobalEnvironment(profileName: profile.name)
             self.activeProfile = profile
-            print("✅ Profile 전환 완료: \(profile.name)")
 
-            // 2. SSO Profile이면 자동 로그인 시도
             if profile.isSSOProfile {
-                print("🔐 SSO 로그인 시도 중...")
                 try? await ssoLogin(profile: profile)
             }
 
@@ -89,16 +77,21 @@ class ProfileManager: ObservableObject {
         errorMessage = nil
 
         do {
+            guard let awsPath = findAWSCLI() else {
+                throw ProfileError.awsCLINotFound
+            }
+
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/local/bin/aws")
+            process.executableURL = URL(fileURLWithPath: awsPath)
             process.arguments = ["sso", "login", "--profile", profile.name]
+
+            let errorPipe = Pipe()
+            process.standardError = errorPipe
 
             try process.run()
             process.waitUntilExit()
 
-            if process.terminationStatus == 0 {
-                print("✅ SSO 로그인 성공: \(profile.name)")
-            } else {
+            if process.terminationStatus != 0 {
                 throw ProfileError.ssoLoginFailed
             }
         } catch {
@@ -108,11 +101,50 @@ class ProfileManager: ObservableObject {
 
         isLoading = false
     }
+
+    private func findAWSCLI() -> String? {
+        let possiblePaths = [
+            "/opt/homebrew/bin/aws",
+            "/usr/local/bin/aws",
+            "/usr/bin/aws"
+        ]
+
+        for path in possiblePaths {
+            if FileManager.default.fileExists(atPath: path) {
+                return path
+            }
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        process.arguments = ["aws"]
+
+        let pipe = Pipe()
+        process.standardOutput = pipe
+
+        do {
+            try process.run()
+            process.waitUntilExit()
+
+            if process.terminationStatus == 0 {
+                let data = pipe.fileHandleForReading.readDataToEndOfFile()
+                if let path = String(data: data, encoding: .utf8)?
+                    .trimmingCharacters(in: .whitespacesAndNewlines), !path.isEmpty {
+                    return path
+                }
+            }
+        } catch {
+            return nil
+        }
+
+        return nil
+    }
 }
 
 enum ProfileError: LocalizedError {
     case notSSOProfile
     case ssoLoginFailed
+    case awsCLINotFound
     case switchFailed(String)
 
     var errorDescription: String? {
@@ -121,6 +153,8 @@ enum ProfileError: LocalizedError {
             return "SSO Profile이 아닙니다."
         case .ssoLoginFailed:
             return "SSO 로그인에 실패했습니다."
+        case .awsCLINotFound:
+            return "AWS CLI를 찾을 수 없습니다. Homebrew로 설치해주세요: brew install awscli"
         case .switchFailed(let message):
             return "Profile 전환 실패: \(message)"
         }
