@@ -29,8 +29,6 @@ class CredentialMonitor: ObservableObject {
     @Published var currentCredential: CredentialInfo?
     @Published var timeRemaining: String?
 
-    private var notificationIdentifier: String?
-
     private var ssoCachePath: URL {
         FileManager.default
             .homeDirectoryForCurrentUser
@@ -42,22 +40,18 @@ class CredentialMonitor: ObservableObject {
     }
 
     func startMonitoring(for profile: AWSProfile) {
-        stopMonitoring()
-
         Task {
+            await stopMonitoring()
             await loadCredential(for: profile)
             updateTimeRemaining()
             await scheduleExpirationNotification()
         }
     }
 
-    func stopMonitoring() {
-        if let identifier = notificationIdentifier {
-            UNUserNotificationCenter.current().removePendingNotificationRequests(
-                withIdentifiers: [identifier]
-            )
-        }
-        notificationIdentifier = nil
+    func stopMonitoring() async {
+        // 모든 pending notification 제거 (가비지 스케줄러 방지)
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+
         currentCredential = nil
         timeRemaining = nil
     }
@@ -89,11 +83,8 @@ class CredentialMonitor: ObservableObject {
             repeats: false
         )
 
-        let identifier = UUID().uuidString
-        self.notificationIdentifier = identifier
-
         let request = UNNotificationRequest(
-            identifier: identifier,
+            identifier: UUID().uuidString,
             content: content,
             trigger: trigger
         )

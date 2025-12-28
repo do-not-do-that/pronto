@@ -46,7 +46,7 @@ class ProfileManager: ObservableObject {
             }
         } else {
             self.activeProfile = nil
-            credentialMonitor.stopMonitoring()
+            await credentialMonitor.stopMonitoring()
         }
     }
 
