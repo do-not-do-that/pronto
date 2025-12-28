@@ -83,7 +83,9 @@ class UpdateChecker: ObservableObject {
     private func installUpdate() async {
         // 1단계: 업데이트 다운로드 및 설치
         let installScript = """
-        brew update-reset && brew reinstall --cask do-not-do-that/pronto/pronto
+        brew update
+        brew tap --force do-not-do-that/pronto
+        brew reinstall --cask do-not-do-that/pronto/pronto
         """
 
         let installProcess = Process()
