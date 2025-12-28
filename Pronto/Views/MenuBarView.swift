@@ -7,7 +7,10 @@ struct MenuBarView: View {
     var body: some View {
         VStack(spacing: 0) {
             if let activeProfile = profileManager.activeProfile {
-                CurrentProfileHeader(profile: activeProfile)
+                CurrentProfileHeader(
+                    profile: activeProfile,
+                    credentialMonitor: profileManager.credentialMonitor
+                )
                 Divider()
             } else if !profileManager.profiles.isEmpty {
                 NoActiveProfileHeader()
@@ -16,29 +19,35 @@ struct MenuBarView: View {
 
             if profileManager.isLoading {
                 ProgressView("로딩 중...")
-                    .frame(height: 100)
+                    .frame(height: 300)
             } else if let errorMessage = profileManager.errorMessage {
                 ErrorView(message: errorMessage) {
                     Task {
                         await profileManager.loadProfiles()
                     }
                 }
+                .frame(height: 300)
             } else if profileManager.profiles.isEmpty {
                 EmptyProfilesView()
+                    .frame(height: 300)
             } else {
                 ProfileListView(profileManager: profileManager)
+                    .frame(height: 300)
             }
 
             Divider()
 
             BottomActionsView(profileManager: profileManager)
+                .environmentObject(appState)
         }
-        .frame(width: 320)
+        .frame(width: 320, height: 450)
+        .fixedSize()
     }
 }
 
 struct CurrentProfileHeader: View {
     let profile: AWSProfile
+    @ObservedObject var credentialMonitor: CredentialMonitor
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -59,9 +68,34 @@ struct CurrentProfileHeader: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+
+            if let timeRemaining = credentialMonitor.timeRemaining {
+                HStack(spacing: 4) {
+                    Image(systemName: "clock")
+                        .font(.caption2)
+                    Text(timeRemaining)
+                        .font(.caption2)
+                }
+                .foregroundColor(timeRemainingColor)
+            }
         }
         .padding(12)
         .background(Color.green.opacity(0.1))
+    }
+
+    private var timeRemainingColor: Color {
+        guard let credential = credentialMonitor.currentCredential,
+              let remaining = credential.timeRemaining else {
+            return .secondary
+        }
+
+        if remaining < 300 {
+            return .red
+        } else if remaining < 1800 {
+            return .orange
+        } else {
+            return .green
+        }
     }
 }
 
@@ -100,7 +134,6 @@ struct ProfileListView: View {
                 }
             }
         }
-        .frame(height: 300)
     }
 }
 
@@ -176,8 +209,7 @@ struct ErrorView: View {
             }
             .buttonStyle(.bordered)
         }
-        .frame(height: 200)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -196,8 +228,7 @@ struct EmptyProfilesView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
-        .frame(height: 200)
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

@@ -11,6 +11,7 @@ class ProfileManager: ObservableObject {
 
     private let environmentManager = EnvironmentManager()
     private let terminalController = TerminalController()
+    let credentialMonitor = CredentialMonitor()
     @AppStorage("updateTerminals") private var updateTerminals = false
 
     init() {
@@ -40,8 +41,12 @@ class ProfileManager: ObservableObject {
     func loadActiveProfile() async {
         if let currentProfileName = ProcessInfo.processInfo.environment["AWS_PROFILE"] {
             self.activeProfile = profiles.first { $0.name == currentProfileName }
+            if let profile = activeProfile {
+                credentialMonitor.startMonitoring(for: profile)
+            }
         } else {
             self.activeProfile = nil
+            credentialMonitor.stopMonitoring()
         }
     }
 
@@ -60,6 +65,8 @@ class ProfileManager: ObservableObject {
             if profile.isSSOProfile {
                 try? await ssoLogin(profile: profile)
             }
+
+            credentialMonitor.startMonitoring(for: profile)
 
         } catch {
             self.errorMessage = "Profile 전환 실패: \(error.localizedDescription)"

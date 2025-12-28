@@ -32,6 +32,17 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
 
+                Section("알림") {
+                    Button("알림 권한 설정") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    Text("만료 임박 알림을 받으려면 알림 권한이 필요합니다")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
                 Section("정보") {
                     LabeledContent("버전", value: "1.0.0")
                     LabeledContent("개발자", value: "do-not-do-that")
