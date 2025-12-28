@@ -100,7 +100,7 @@ struct ProfileListView: View {
                 }
             }
         }
-        .frame(maxHeight: 400)
+        .frame(height: 300)
     }
 }
 
@@ -203,6 +203,7 @@ struct EmptyProfilesView: View {
 
 struct BottomActionsView: View {
     @ObservedObject var profileManager: ProfileManager
+    @EnvironmentObject var appState: AppState
 
     var body: some View {
         HStack(spacing: 8) {
@@ -218,6 +219,15 @@ struct BottomActionsView: View {
             .disabled(profileManager.isLoading)
 
             Spacer()
+
+            Button {
+                appState.showSettings = true
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                Label("설정", systemImage: "gear")
+                    .font(.system(size: 12))
+            }
+            .buttonStyle(.bordered)
 
             Button {
                 NSApp.terminate(nil)
