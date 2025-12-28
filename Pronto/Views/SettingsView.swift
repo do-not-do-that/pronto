@@ -34,7 +34,7 @@ struct SettingsView: View {
 
                 Section("정보") {
                     LabeledContent("버전", value: "1.0.0")
-                    LabeledContent("개발자", value: "Medistream")
+                    LabeledContent("개발자", value: "do-not-do-that")
                 }
             }
             .formStyle(.grouped)

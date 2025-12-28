@@ -31,6 +31,7 @@ export AWS_PROFILE=dev-account-a
 - 🚀 **원클릭 전환**: 메뉴바에서 Profile 클릭 한 번으로 전환
 - 🔐 **자동 SSO 로그인**: Profile 전환 시 브라우저에서 자동 로그인
 - 🌍 **전역 적용**: DataGrip, VSCode, 터미널 등 모든 도구에 자동 반영
+- 🔄 **터미널 세션 자동 업데이트**: iTerm2/Terminal.app의 열린 세션 즉시 반영
 - ⚡ **빠른 실행**: 메뉴바에 상주하는 가벼운 앱
 - 🔄 **자동 구성**: 첫 실행 시 Shell 설정 자동 완료
 - 🍎 **Apple Silicon 지원**: M1/M2/M3 Mac 완벽 지원
@@ -85,6 +86,31 @@ echo $AWS_PROFILE
 # 기존 터미널에서 (필요시)
 source ~/.pronto_profile
 ```
+
+### 터미널 세션 자동 업데이트
+
+설정에서 "터미널 세션 업데이트"를 활성화하면, Profile 전환 시 **열려있는 터미널 세션**도 즉시 업데이트됩니다.
+
+**지원 터미널:**
+- ✅ **iTerm2**: 모든 창과 탭 자동 업데이트
+- ✅ **Terminal.app**: macOS 기본 터미널 자동 업데이트
+
+**미지원 터미널:**
+- ❌ **IDE 통합 터미널** (Cursor, VS Code, etc.): 새 터미널만 자동 적용
+- ❌ **Termius, Warp 등**: 새 터미널만 자동 적용
+
+**동작 방식:**
+
+| 터미널 | 기존 세션 | 새 세션 |
+|--------|----------|---------|
+| iTerm2 | ✅ 즉시 반영 | ✅ 자동 적용 |
+| Terminal.app | ✅ 즉시 반영 | ✅ 자동 적용 |
+| Cursor, VS Code | ❌ 수동 (`source ~/.pronto_profile`) | ✅ 자동 적용 |
+| Termius, Warp | ❌ 수동 (`source ~/.pronto_profile`) | ✅ 자동 적용 |
+
+**권장 설정:**
+- iTerm2/Terminal.app 사용자: **ON** (즉시 반영)
+- IDE 터미널 사용자: **OFF** (새 터미널로 전환)
 
 ---
 
@@ -154,7 +180,8 @@ which aws
 
 ### 환경변수가 안 보여요
 
-- **새 터미널 창**을 열었는지 확인 (기존 창 X)
+**새 터미널 세션:**
+- **새 터미널 창/탭**을 열었는지 확인 (기존 창 X)
 - Shell 설정 확인:
 
 ```bash
@@ -164,6 +191,10 @@ cat ~/.zshrc | grep pronto
 # 출력 예시:
 # [ -f ~/.pronto_profile ] && source ~/.pronto_profile
 ```
+
+**기존 터미널 세션:**
+- iTerm2/Terminal.app: 설정에서 "터미널 세션 업데이트" 활성화
+- 기타 터미널: 수동으로 `source ~/.pronto_profile` 실행
 
 ---
 
@@ -180,7 +211,8 @@ Pronto/
 ├── Services/
 │   ├── AWSConfigParser.swift   # ~/.aws/config 파싱
 │   ├── ProfileManager.swift    # Profile 관리 + SSO 로그인
-│   └── EnvironmentManager.swift # 환경변수 관리
+│   ├── EnvironmentManager.swift # 환경변수 관리
+│   └── TerminalController.swift # 터미널 세션 업데이트
 ├── Views/
 │   ├── MenuBarView.swift        # 메뉴바 UI
 │   └── SettingsView.swift       # 설정 창
@@ -246,9 +278,9 @@ open Pronto.xcodeproj
 - [ ] 키보드 단축키
 
 ### v2.0 (예정)
-- [ ] 기존 터미널 세션 자동 업데이트 (AppleScript)
 - [ ] Homebrew Cask 배포
 - [ ] 다크 모드 커스터마이징
+- [ ] 더 많은 터미널 지원 (Warp, Alacritty 등)
 
 ---
 

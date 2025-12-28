@@ -18,7 +18,7 @@ struct ProntoApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        WindowGroup(id: "settings") {
+        Window("설정", id: "settings") {
             SettingsView()
                 .environmentObject(appState)
         }

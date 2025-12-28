@@ -10,6 +10,8 @@ class ProfileManager: ObservableObject {
     @Published var errorMessage: String?
 
     private let environmentManager = EnvironmentManager()
+    private let terminalController = TerminalController()
+    @AppStorage("updateTerminals") private var updateTerminals = false
 
     init() {
         environmentManager.initializeIfNeeded()
@@ -50,6 +52,10 @@ class ProfileManager: ObservableObject {
         do {
             try environmentManager.setGlobalEnvironment(profileName: profile.name)
             self.activeProfile = profile
+
+            if updateTerminals {
+                try? terminalController.updateAllTerminals(profileName: profile.name)
+            }
 
             if profile.isSSOProfile {
                 try? await ssoLogin(profile: profile)
