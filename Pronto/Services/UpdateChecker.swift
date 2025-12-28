@@ -75,19 +75,40 @@ class UpdateChecker: ObservableObject {
     }
 
     func startAutoUpdate() {
-        let script = """
-        tell application "Terminal"
-            activate
-            do script "brew reinstall --cask do-not-do-that/pronto/pronto && killall Pronto && sleep 1 && open -a Pronto"
-        end tell
+        Task {
+            await installUpdate()
+        }
+    }
+
+    private func installUpdate() async {
+        // 1단계: 업데이트 다운로드 및 설치
+        let installScript = """
+        brew update-reset && brew reinstall --cask do-not-do-that/pronto/pronto
         """
 
-        if let scriptObject = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            scriptObject.executeAndReturnError(&error)
+        let installProcess = Process()
+        installProcess.executableURL = URL(fileURLWithPath: "/bin/sh")
+        installProcess.arguments = ["-c", installScript]
 
-            if let error = error {
-                print("AppleScript error: \(error)")
+        do {
+            try installProcess.run()
+            installProcess.waitUntilExit()
+
+            // 2단계: 설치 완료 후 앱 재시작
+            let restartScript = """
+            killall Pronto
+            sleep 1
+            open /Applications/Pronto.app
+            """
+
+            let restartProcess = Process()
+            restartProcess.executableURL = URL(fileURLWithPath: "/bin/sh")
+            restartProcess.arguments = ["-c", restartScript]
+
+            try restartProcess.run()
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "업데이트 설치 실패: \(error.localizedDescription)"
             }
         }
     }

@@ -105,11 +105,11 @@ struct SettingsView: View {
             } else if updateChecker.updateAvailable, let latest = updateChecker.latestVersion {
                 return Alert(
                     title: Text("업데이트 사용 가능"),
-                    message: Text("새 버전 \(latest)이(가) 사용 가능합니다.\n현재 버전: \(appVersion)\n\n터미널에서 Homebrew로 자동 업데이트하시겠습니까?"),
-                    primaryButton: .default(Text("자동 업데이트")) {
+                    message: Text("새 버전 \(latest)이(가) 사용 가능합니다.\n현재 버전: \(appVersion)\n\nPronto가 업데이트를 설치합니다. 잠시 후 앱이 재시작됩니다."),
+                    primaryButton: .default(Text("설치")) {
                         updateChecker.startAutoUpdate()
                     },
-                    secondaryButton: .cancel(Text("나중에"))
+                    secondaryButton: .cancel(Text("취소"))
                 )
             } else {
                 return Alert(
