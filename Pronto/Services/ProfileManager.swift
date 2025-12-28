@@ -39,7 +39,7 @@ class ProfileManager: ObservableObject {
     }
 
     func loadActiveProfile() async {
-        if let currentProfileName = ProcessInfo.processInfo.environment["AWS_PROFILE"] {
+        if let currentProfileName = environmentManager.getGlobalEnvironment() {
             self.activeProfile = profiles.first { $0.name == currentProfileName }
             if let profile = activeProfile {
                 credentialMonitor.startMonitoring(for: profile)
