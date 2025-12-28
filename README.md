@@ -8,39 +8,37 @@
 
 ---
 
-## 🎯 무엇을 해결하나요?
+## 무엇을 해결하나요?
 
 개발 중 여러 AWS 계정을 자주 전환해야 한다면...
 
-**Before Pronto** 😓
+**Before Pronto**
 ```bash
 # 매번 반복...
 aws sso login --profile dev-account-a
 export AWS_PROFILE=dev-account-a
 ```
 
-**After Pronto** 😎
+**After Pronto**
 ```
 메뉴바 아이콘 클릭 → Profile 선택 → 완료!
 ```
 
 ---
 
-## ✨ 주요 기능
+## 주요 기능
 
-- 🚀 **원클릭 전환**: 메뉴바에서 Profile 클릭 한 번으로 전환
-- 🔐 **자동 SSO 로그인**: Profile 전환 시 브라우저에서 자동 로그인
-- 🔔 **만료 알림**: Credential 만료 5분 전 자동 알림 (배터리 효율적)
-- ⏱️ **만료 시간 표시**: 남은 시간 실시간 표시
-- 🌍 **전역 적용**: DataGrip, VSCode, 터미널 등 모든 도구에 자동 반영
-- 🔄 **터미널 세션 자동 업데이트**: iTerm2/Terminal.app의 열린 세션 즉시 반영
-- ⚡ **빠른 실행**: 메뉴바에 상주하는 가벼운 앱
-- 🔄 **자동 구성**: 첫 실행 시 Shell 설정 자동 완료
-- 🍎 **Apple Silicon 지원**: M1/M2/M3 Mac 완벽 지원
+- 원클릭 전환: 메뉴바에서 Profile 클릭 한 번으로 전환
+- 자동 SSO 로그인: Profile 전환 시 브라우저에서 자동 로그인
+- 만료 알림: Credential 만료 5분 전 자동 알림 (배터리 효율적)
+- 만료 시간 표시: 남은 시간 실시간 표시
+- 전역 적용: DataGrip, VSCode, 터미널 등 모든 도구에 자동 반영
+- 터미널 세션 자동 업데이트: iTerm2/Terminal.app의 열린 세션 즉시 반영
+- Apple Silicon 지원: M1/M2/M3 Mac 완벽 지원
 
 ---
 
-## 📦 설치
+## 설치
 
 ### 요구사항
 
@@ -76,7 +74,7 @@ open -a Pronto
 
 ---
 
-## 🚀 사용 방법
+## 사용 방법
 
 ### 첫 실행
 
@@ -129,13 +127,13 @@ source ~/.pronto_profile
 
 ---
 
-## ❓ FAQ
+## FAQ
 
 문제가 있나요? [FAQ 문서](FAQ.md)를 확인해보세요.
 
 ---
 
-## 🐛 피드백
+## 피드백
 
 버그 리포트나 기능 제안은 언제든 환영합니다!
 
@@ -143,6 +141,6 @@ source ~/.pronto_profile
 
 ---
 
-## 📄 라이선스
+## 라이선스
 
 MIT License - 자유롭게 사용, 수정, 배포 가능합니다.
