@@ -1,8 +1,8 @@
 cask "pronto" do
-  version "1.0.0"
-  sha256 "713650873239d10da8e84048d4a0ed99da890d836a59ef2ea74b7a15ef4a0192"
+  version "1.1.0"
+  sha256 "8dbbcfc56ed415f3d3aa75d9f3ff7cb5343e05ac2ef7ddc027b8f3b0c8926be7"
 
-  url "https://github.com/do-not-do-that/pronto/releases/download/v#{version}/Pronto.app.zip"
+  url "https://github.com/do-not-do-that/pronto/releases/download/v#{version}/Pronto-v#{version}.app.zip"
   name "Pronto"
   desc "AWS SSO profile switcher for macOS menu bar"
   homepage "https://github.com/do-not-do-that/pronto"
