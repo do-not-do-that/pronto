@@ -5,7 +5,7 @@ struct ProntoApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {
-        MenuBarExtra("Pronto", systemImage: "cloud") {
+        MenuBarExtra("Pronto", image: "menubar-icon") {
             MenuBarView()
                 .environmentObject(appState)
         }
