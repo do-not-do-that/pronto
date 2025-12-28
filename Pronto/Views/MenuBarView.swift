@@ -393,7 +393,8 @@ struct BottomActionsView: View {
             }
             .buttonStyle(.bordered)
         }
-        .padding(8)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
     }
 }
 
