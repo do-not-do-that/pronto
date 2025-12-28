@@ -81,11 +81,12 @@ class UpdateChecker: ObservableObject {
     }
 
     private func installUpdate() async {
-        // 1단계: 업데이트 다운로드 및 설치
+        // 1단계: 캐시 정리 및 업데이트 다운로드/설치
         let installScript = """
         brew update
         brew tap --force do-not-do-that/pronto
-        brew reinstall --cask do-not-do-that/pronto/pronto
+        brew cleanup do-not-do-that/pronto/pronto
+        brew upgrade --cask --force --no-quarantine do-not-do-that/pronto/pronto || brew reinstall --cask --force --no-quarantine do-not-do-that/pronto/pronto
         """
 
         let installProcess = Process()
@@ -99,7 +100,7 @@ class UpdateChecker: ObservableObject {
             // 2단계: 설치 완료 후 앱 재시작
             let restartScript = """
             killall Pronto
-            sleep 1
+            sleep 2
             open /Applications/Pronto.app
             """
 
