@@ -3,6 +3,7 @@ import SwiftUI
 struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var profileManager = ProfileManager()
+    @StateObject private var favoriteManager = FavoriteManager()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,8 +32,11 @@ struct MenuBarView: View {
                 EmptyProfilesView()
                     .frame(height: 300)
             } else {
-                ProfileListView(profileManager: profileManager)
-                    .frame(height: 300)
+                ProfileListView(
+                    profileManager: profileManager,
+                    favoriteManager: favoriteManager
+                )
+                .frame(height: 300)
             }
 
             Divider()
@@ -40,6 +44,7 @@ struct MenuBarView: View {
             BottomActionsView(profileManager: profileManager)
                 .environmentObject(appState)
         }
+        .padding(.top, -20)
         .frame(width: 320, height: 450)
         .fixedSize()
     }
@@ -120,20 +125,93 @@ struct NoActiveProfileHeader: View {
 
 struct ProfileListView: View {
     @ObservedObject var profileManager: ProfileManager
+    @ObservedObject var favoriteManager: FavoriteManager
+
+    private var favoriteProfiles: [AWSProfile] {
+        profileManager.profiles.filter { favoriteManager.isFavorite($0.name) }
+    }
+
+    private var otherProfiles: [AWSProfile] {
+        profileManager.profiles.filter { !favoriteManager.isFavorite($0.name) }
+    }
 
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(profileManager.profiles) { profile in
-                    ProfileRow(
-                        profile: profile,
-                        isActive: profile.id == profileManager.activeProfile?.id
-                    ) {
-                        Task {
-                            try? await profileManager.switchProfile(profile)
-                        }
+                // 즐겨찾기 섹션
+                if !favoriteProfiles.isEmpty {
+                    // 헤더
+                    HStack {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                            .font(.caption)
+                        Text("즐겨찾기")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                        Spacer()
                     }
-                    Divider()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.gray.opacity(0.1))
+
+                    ForEach(favoriteProfiles) { profile in
+                        ProfileRow(
+                            profile: profile,
+                            isActive: profile.id == profileManager.activeProfile?.id,
+                            favoriteManager: favoriteManager,
+                            onTap: {
+                                Task {
+                                    try? await profileManager.switchProfile(profile)
+                                }
+                            }
+                        )
+                        Divider()
+                    }
+                }
+
+                // 모든 Profile 섹션
+                if !otherProfiles.isEmpty && !favoriteProfiles.isEmpty {
+                    // 헤더
+                    HStack {
+                        Text("모든 Profile")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.gray.opacity(0.1))
+
+                    ForEach(otherProfiles) { profile in
+                        ProfileRow(
+                            profile: profile,
+                            isActive: profile.id == profileManager.activeProfile?.id,
+                            favoriteManager: favoriteManager,
+                            onTap: {
+                                Task {
+                                    try? await profileManager.switchProfile(profile)
+                                }
+                            }
+                        )
+                        Divider()
+                    }
+                } else if favoriteProfiles.isEmpty {
+                    // 즐겨찾기가 없으면 모든 profile 표시
+                    ForEach(profileManager.profiles) { profile in
+                        ProfileRow(
+                            profile: profile,
+                            isActive: profile.id == profileManager.activeProfile?.id,
+                            favoriteManager: favoriteManager,
+                            onTap: {
+                                Task {
+                                    try? await profileManager.switchProfile(profile)
+                                }
+                            }
+                        )
+                        Divider()
+                    }
                 }
             }
         }
@@ -143,50 +221,70 @@ struct ProfileListView: View {
 struct ProfileRow: View {
     let profile: AWSProfile
     let isActive: Bool
+    @ObservedObject var favoriteManager: FavoriteManager
     let onTap: () -> Void
 
     @State private var isHovering = false
 
+    private var isFavorite: Bool {
+        favoriteManager.isFavorite(profile.name)
+    }
+
     var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 12) {
-                if isActive {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
-                        .frame(width: 20)
-                } else {
-                    Circle()
-                        .fill(Color.gray.opacity(0.3))
-                        .frame(width: 20, height: 20)
-                }
+        HStack(spacing: 12) {
+            // Profile 선택 버튼
+            Button(action: onTap) {
+                HStack(spacing: 12) {
+                    if isActive {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                            .frame(width: 20)
+                    } else {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 20, height: 20)
+                    }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(profile.displayName)
-                        .font(.system(size: 13))
-                        .foregroundColor(.primary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(profile.displayName)
+                            .font(.system(size: 13))
+                            .foregroundColor(.primary)
 
-                    if let accountInfo = profile.accountInfo {
-                        Text(accountInfo)
+                        if let accountInfo = profile.accountInfo {
+                            Text(accountInfo)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+
+                    Spacer()
+
+                    if profile.isSSOProfile {
+                        Image(systemName: "key.fill")
                             .font(.system(size: 11))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.blue)
                     }
                 }
-
-                Spacer()
-
-                if profile.isSSOProfile {
-                    Image(systemName: "key.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(.blue)
-                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(isHovering ? Color.blue.opacity(0.1) : Color.clear)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(isHovering ? Color.blue.opacity(0.1) : Color.clear)
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovering = hovering
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                isHovering = hovering
+            }
+
+            // 즐겨찾기 버튼
+            Button(action: {
+                favoriteManager.toggleFavorite(profile.name)
+            }) {
+                Image(systemName: isFavorite ? "star.fill" : "star")
+                    .foregroundColor(isFavorite ? .yellow : .gray)
+                    .font(.system(size: 14))
+                    .frame(width: 30)
+            }
+            .buttonStyle(.plain)
+            .help(isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가")
         }
     }
 }
