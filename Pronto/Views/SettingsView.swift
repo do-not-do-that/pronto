@@ -5,6 +5,10 @@ struct SettingsView: View {
     @AppStorage("autoRefresh") private var autoRefresh = true
     @AppStorage("updateTerminals") private var updateTerminals = false
 
+    private var appVersion: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -44,7 +48,7 @@ struct SettingsView: View {
                 }
 
                 Section("정보") {
-                    LabeledContent("버전", value: "1.0.0")
+                    LabeledContent("버전", value: appVersion)
                     LabeledContent("개발자", value: "do-not-do-that")
                 }
             }
