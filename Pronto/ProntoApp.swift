@@ -9,7 +9,7 @@ struct ProntoApp: App {
         MenuBarExtra("Pronto", image: "menubar-icon") {
             MenuBarView()
                 .environmentObject(appState)
-                .onChange(of: appState.showSettings) { _, newValue in
+                .onChange(of: appState.showSettings) { newValue in
                     if newValue {
                         openWindow(id: "settings")
                         appState.showSettings = false
